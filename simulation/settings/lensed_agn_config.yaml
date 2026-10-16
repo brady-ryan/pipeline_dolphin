@@ -1,0 +1,85 @@
+lens_name: lensed_agn
+band: ["F115W"]
+psf_supersampled_factor: 3
+
+model:
+  lens: [SIE, SHEAR_GAMMA_PSI]
+  lens_light: [SERSIC_ELLIPSE, SERSIC_ELLIPSE]
+  source_light: [SERSIC_ELLIPSE, SHAPELETS]
+  point_source: [LENSED_POSITION]
+  special: [time_delay_likelihood]
+  
+lens_options:
+  centroid_init: [0.0027, 0.0115]
+  centroid_bound: 0.2
+  uniform_prior:
+    0: [[theta_E, 0.1, 4.], [e1, -0.8, 0.8], [e2, -0.8, 0.8]]
+    1: [[gamma_ext, 0., .15]]
+
+lens_light_options:
+  uniform_prior:
+    0: [[R_sersic, 0.08, 5.], [n_sersic, 0.5, 6.], [e1, -0.8, 0.8], [e2, -0.8, 0.8]]
+    
+source_light_options:
+  uniform_prior:
+    0: [[R_sersic, 0.08, 1.5], [n_sersic, 0.5, 4.], [e1, -0.5, 0.5], [e2, -0.5, 0.5]]
+  n_max: [3]
+    
+point_source_options:
+  ra_init: [-0.1202, 0.1584, 0.7730, -0.7267]
+  dec_init: [-1.1850, 0.9293, 0.0033, 0.2245]
+  bound: 0.2
+  time_delays_measured: [37.94, 58.82, 61.83]
+  time_delays_covariance: [[1., 0., 0.,], [0., 1., 0.], [0., 0., 1.]]
+
+special_options:
+  H0: 68
+  Om0: 0.3
+
+fitting:
+  pso: True
+  pso_settings: 
+    num_particle: 100
+    num_iteration: 100
+    threadCount: 32
+  
+  psf_iteration: True
+  psf_iteration_settings:
+     num_iter: 100
+     psf_iter_factor: 0.2
+     psf_symmetry: 1
+     block_center_neighbour: 0.05
+     keep_psf_variance_map: True
+     stacking_method: "median"
+     
+  sampling: True
+  sampler: "emcee"
+  sampler_settings:
+    n_burn : 55000
+    n_run: 5000
+    walkerRatio: 10
+    threadCount: 32
+
+kwargs_constraints:
+  joint_lens_with_light: [[0, 0, ['center_x', 'center_y']]]
+  joint_lens_light_with_lens_light: [[0, 1, ['center_x', 'center_y']]]
+  num_point_source_list: [4]
+  joint_source_with_point_source: [[0, 0, ['center_x', 'center_y']]]
+  joint_source_with_source: [[0, 1, ['center_x', 'center_y']]]
+  solver_type: NONE
+
+kwargs_likelihood:
+  source_position_likelihood: True
+  source_position_tolerance: 0.004
+  source_position_sigma: 0.004
+  image_position_uncertainty: 0.004
+  check_bounds: True
+  check_positive_flux: True
+
+kwargs_model:
+  z_source: 0.788751
+  z_lens: 0.481053
+  
+numeric_options:
+  supersampling_factor: [1]
+  point_source_supersampling_factor: [1]
