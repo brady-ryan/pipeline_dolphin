@@ -1,0 +1,84 @@
+lens_name: J1620+1203
+band: ["F160W", "F814W", "F475X"]
+
+model:
+  lens: [SIE, SHEAR_GAMMA_PSI]
+  lens_light: [SERSIC_ELLIPSE, UNIFORM]
+  source_light: [SERSIC_ELLIPSE]
+  point_source: [LENSED_POSITION]
+  
+lens_options:
+  centroid_init: [0.23999999999999755, 0.07999999999999963]
+  centroid_bound: 0.2
+  limit_mass_pa_from_light: 10.0
+  limit_mass_q_from_light: 0.1
+  uniform_prior:
+    0: [[theta_E, 0.1, 4.], [e1, -0.4, 0.4], [e2, -0.4, 0.4]]
+    1: [[gamma_ext, 0., .15]]
+
+lens_light_options:
+  uniform_prior:
+    0: [[R_sersic, 0.08, 5.], [n_sersic, 0.5, 6.], [e1, -0.5, 0.5], [e2, -0.5, 0.5]]
+    2: [[R_sersic, 0.08, 5.], [n_sersic, 0.5, 6.], [e1, -0.5, 0.5], [e2, -0.5, 0.5]]
+    4: [[R_sersic, 0.08, 5.], [n_sersic, 0.5, 6.], [e1, -0.5, 0.5], [e2, -0.5, 0.5]]
+    
+source_light_options:
+  uniform_prior:
+    0: [[R_sersic, 0.08, 1.5], [n_sersic, 0.5, 4.], [e1, -0.5, 0.5], [e2, -0.5, 0.5]]
+    1: [[R_sersic, 0.08, 1.5], [n_sersic, 0.5, 4.], [e1, -0.5, 0.5], [e2, -0.5, 0.5]]
+    2: [[R_sersic, 0.08, 1.5], [n_sersic, 0.5, 4.], [e1, -0.5, 0.5], [e2, -0.5, 0.5]]
+    
+point_source_options:
+  ra_init: [-1.3599999999999866, 0.7199999999999926]
+  dec_init: [1.359999999999998, -0.39999999999999947]
+  bound: 0.2
+
+special_options:
+  point_source_offset: 0.04
+
+fitting:
+  pso: True
+  pso_settings: 
+    num_particle: 100
+    num_iteration: 100
+    threadCount: 32
+  
+  psf_iteration: True
+  psf_iteration_settings:
+     num_iter: 100
+     psf_iter_factor: 0.2
+     psf_symmetry: 4
+     block_center_neighbour: 0.05
+     keep_psf_variance_map: True
+     stacking_method: "median"
+     
+  sampling: True
+  sampler: "emcee"
+  sampler_settings:
+    n_burn : 55000
+    n_run: 5000
+    walkerRatio: 10
+    backend_filename: "J1620+1203_psfr_backend_jax.h5"
+    start_from_backend: False
+    threadCount: 32
+
+kwargs_constraints:
+  joint_lens_with_light: [[0, 0, ['center_x', 'center_y']]] # Mass, Lens Light
+  joint_lens_light_with_lens_light: [[0, 2, ['center_x', 'center_y']], [0, 4, ['center_x', 'center_y']]] # Lens Light profiles across all bands
+  num_point_source_list: [2]
+  joint_source_with_point_source: [[0, 0, ['center_x', 'center_y']]]
+  joint_source_with_source: [[0, 1, ['center_x', 'center_y', 'R_sersic', 'n_sersic', 'e1', 'e2']], [0, 2, ['center_x', 'center_y', 'R_sersic', 'n_sersic', 'e1', 'e2']]]
+  solver_type: NONE # PROFILE_SHEAR
+
+kwargs_likelihood:
+  source_position_likelihood: True
+  source_position_tolerance: 0.004
+  source_position_sigma: 0.004
+  image_position_uncertainty: 0.004
+  check_bounds: True
+
+numeric_options:
+  supersampling_factor: [1, 1, 1]
+  point_source_supersampling_factor: [1, 1, 1]
+
+mask: {provided: true}

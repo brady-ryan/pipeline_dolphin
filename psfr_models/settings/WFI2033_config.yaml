@@ -1,0 +1,139 @@
+lens_name: 'WFI2033'
+
+band: ['F115W']
+pixel_size: [0.0307]
+psf_supersampled_factor: 1
+
+model:
+  lens: ['EPL', 'SHEAR_GAMMA_PSI'] # Lens, Shear
+  lens_light: ['SERSIC_ELLIPSE', 'SERSIC_ELLIPSE'] # Lens, Lens, satellite profiles automatically created in Dolphin
+  source_light: ['SERSIC_ELLIPSE', 'SHAPELETS']
+  point_source: ['LENSED_POSITION'] 
+
+satellites:
+  centroid_init: [[0.2284335760769315, 2.0487963603264587], [-3.9980782209974413, -0.03355418879249307], [2.82286826, 7.00585372], [-4.57849239, -11.71861344]] # GX, G2, G3, G7
+  centroid_bound: 0.2
+  is_elliptical: [False, False, False, False]
+
+lens_options:
+  centroid_init: [-0.002909321555483085, 0.01183709864818021]
+  centroid_bound: 0.2
+  limit_mass_pa_from_light: 15
+  limit_mass_q_from_light: 0.1
+  gaussian_prior:
+    0: [[theta_E, 0.879, 0.133], [e1, 0, 0.2], [e2, 0., 0.2]] # Main lens
+    2: [[theta_E, 0.15, 0.03]]    # GX
+  uniform_prior:
+    0: [[gamma, 1.5, 2.5]]     # Lens
+    2: [[theta_E, .03, 0.25]]  # GX
+    3: [[theta_E, .03, 1.]]    # G2 - needed to raise upper bound
+  fix:
+    3: #G2
+      center_x: -3.9980782209974413
+      center_y: -0.03355418879249307
+      theta_E: 0.70762  # = 0.622 / 0.879, ratio to main lens theta_E
+    4: # G3
+      center_x: 2.82286826
+      center_y: 7.00585372
+      theta_E: 0.10011  # = 0.088 / 0.879
+    5: # G7
+      center_x: -4.57849239
+      center_y: -11.71861344
+      theta_E: 0.44141  # = 0.388 / 0.879
+
+lens_light_options:
+  uniform_prior:
+    0: [[R_sersic, 0.03, 5.], [e1, -.2, .2], [e2, -.2, .2]] # Lens 1
+    1: [[R_sersic, 0.03, 5.], [e1, -.5, .5], [e2, -.5, .5]] # Lens 2
+    2: [[R_sersic, 0.03, 0.1], [n_sersic, 1, 10]]           # GX
+    3: [[R_sersic, 0.03, 5.], [n_sersic, .1, 2]]            # G2
+  fix:
+    0: # Lens 1
+      n_sersic: 4
+    1: # Lens 2
+      n_sersic: 1
+    4: # G3
+      amp: 0
+    5: # G7
+      amp: 0
+      
+source_light_options:
+  n_max: 18
+  uniform_prior:
+    0: [[R_sersic, 0.04, 3.], [n_sersic, 0.15, 4.], [e1, -.15, .15], [e2, -.15, .15]]
+    1: [[beta, 0.031, 0.3]]
+
+point_source_options:
+  ra_init: [1.4337385226794055, -0.0503004177728188, -0.7604676905838376, -0.6864899327929306] # B, A2, A1, C
+  dec_init: [-0.3025048205105350,  1.0757837366805765, 0.9583309398431404, -0.5791120992704583]
+  bound: 0.1
+  time_delays_measured: [37.3, 36.2, 59.4]
+  time_delays_covariance: [[7.84, 0, 0], [0, 3.8025, 0], [0, 0, 1.69]]
+
+special_options:
+    point_source_offset: 0.06
+    cosmology: "FlatLambdaCDM"
+    H0: 70
+    Om0: 0.3
+    general_scaling:
+      theta_E:
+        [False, False, False, 1, 1, 1] # Lens, Shear, GX, G2, G3, G7,
+    theta_E_scale_factor: [0.879]
+    theta_E_scale_factor_sigma: [0.25]
+    theta_E_scale_pow: [1]
+
+fitting:
+  pso: True
+  pso_settings:
+    num_particle: 100
+    num_iteration: 100
+    threadCount: 16
+
+  psf_iteration: True
+  psf_iteration_settings:
+     num_iter: 100
+     psf_iter_factor: 0.25
+     psf_symmetry: 1
+     block_center_neighbour: 0.375
+     keep_psf_variance_map: True
+     stacking_method: "median"
+
+  sampling: True
+  sampler: "emcee"
+  sampler_settings:
+    n_burn : 25000
+    n_run: 5000
+    walkerRatio: 10
+    backend_filename: "output_notebooks/WFI2033/WFI2033_psfr_backend_jax.h5"
+    start_from_backend: False
+    threadCount: 16
+
+kwargs_constraints:
+  joint_lens_with_light: [[0, 0, ['center_x', 'center_y']], [2, 2, ['center_x', 'center_y']], [3, 3, ['center_x', 'center_y']], [4, 4, ['center_x', 'center_y']], [5, 5, ['center_x', 'center_y']]] # Lens, GX, G2, G3, G7
+  joint_lens_light_with_lens_light: [[0, 1, ['center_x', 'center_y']]] # Lens
+  num_point_source_list: [4]
+  joint_source_with_point_source: [[0, 0, ['center_x', 'center_y']]]
+  joint_source_with_source: [[0, 1, ['center_x', 'center_y']]]
+  solver_type: NONE
+
+kwargs_likelihood:
+  source_position_likelihood: True
+  source_position_tolerance: 0.001
+  source_position_sigma: 0.001
+  image_position_uncertainty: 0.0004
+  check_bounds: True
+  check_positive_flux: True
+
+kwargs_model:
+  multi_plane: True
+  lens_redshift_list: [0.6575, 0.6575, 0.6575, 0.7450, 0.6575, 0.6575,]
+  observed_convention_index: [3]
+  z_source: 1.662
+  z_lens: 0.6575
+
+numeric_options:
+  supersampling_factor: [1]
+  point_source_supersampling_factor: [1]  
+
+mask:
+  provided: True
