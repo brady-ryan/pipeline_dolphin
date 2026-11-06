@@ -9,6 +9,7 @@ model:
   lens_light: ['SERSIC_ELLIPSE', 'SERSIC_ELLIPSE'] # Lens, Lens, satellite profiles automatically created in Dolphin
   source_light: ['SERSIC_ELLIPSE', 'SHAPELETS']
   point_source: ['LENSED_POSITION'] 
+  special: ["astrometric_uncertainty", "time_delay_likelihood", "general_scaling"]
 
 satellites:
   centroid_init: [[0.2284335760769315, 2.0487963603264587], [-3.9980782209974413, -0.03355418879249307], [2.82286826, 7.00585372], [-4.57849239, -11.71861344]] # GX, G2, G3, G7
@@ -21,25 +22,30 @@ lens_options:
   limit_mass_pa_from_light: 15
   limit_mass_q_from_light: 0.1
   gaussian_prior:
-    0: [[theta_E, 0.879, 0.133], [e1, 0, 0.2], [e2, 0., 0.2]] # Main lens
+    0: [[theta_E, 0.589, 0.035], [e1, 0, 0.2], [e2, 0., 0.2]] # Main lens
     2: [[theta_E, 0.15, 0.03]]    # GX
+    3: [[theta_E, 0.700, 0.073]] # G2
+    4: [[theta_E, 0.088, 0.035]] # G3
+    5: [[theta_E, 0.388, 0.028]] # G7  
   uniform_prior:
-    0: [[gamma, 1.5, 2.5]]     # Lens
-    2: [[theta_E, .03, 0.25]]  # GX
-    3: [[theta_E, .03, 1.]]    # G2 - needed to raise upper bound
+    0: [[gamma, 1.5, 2.5]]      # Lens
+    2: [[theta_E, 0.03, 0.25]]  # GX
+    3: [[theta_E, 0.48, 0.92]]  # G2
+    4: [[theta_E, 0.005, 0.19]] # G3
+    5: [[theta_E, 0.30, 0.5]]   # G7
   fix:
     3: #G2
       center_x: -3.9980782209974413
       center_y: -0.03355418879249307
-      theta_E: 0.70762  # = 0.622 / 0.879, ratio to main lens theta_E
+      theta_E: 1.188  # = 0.700 / 0.589, ratio to main lens theta_E
     4: # G3
       center_x: 2.82286826
       center_y: 7.00585372
-      theta_E: 0.10011  # = 0.088 / 0.879
+      theta_E: 0.149  # = 0.088 / 0.589
     5: # G7
       center_x: -4.57849239
       center_y: -11.71861344
-      theta_E: 0.44141  # = 0.388 / 0.879
+      theta_E: 0.658  # = 0.388 / 0.589
 
 lens_light_options:
   uniform_prior:
@@ -71,14 +77,17 @@ point_source_options:
   time_delays_covariance: [[7.84, 0, 0], [0, 3.8025, 0], [0, 0, 1.69]]
 
 special_options:
-    point_source_offset: 0.06
+    delta_x_image: [0.06, 0.06, 0.06, 0.06]
+    delta_y_image: [0.06, 0.06, 0.06, 0.06]
+    delta_image_upper: 0.06
+    delta_image_lower: -0.06
     cosmology: "FlatLambdaCDM"
     H0: 70
     Om0: 0.3
     general_scaling:
       theta_E:
         [False, False, False, 1, 1, 1] # Lens, Shear, GX, G2, G3, G7,
-    theta_E_scale_factor: [0.879]
+    theta_E_scale_factor: [1.]
     theta_E_scale_factor_sigma: [0.25]
     theta_E_scale_pow: [1]
 
@@ -87,7 +96,7 @@ fitting:
   pso_settings:
     num_particle: 100
     num_iteration: 100
-    threadCount: 16
+    threadCount: 32
 
   psf_iteration: True
   psf_iteration_settings:
@@ -106,7 +115,7 @@ fitting:
     walkerRatio: 10
     backend_filename: "output_notebooks/WFI2033/WFI2033_psfr_backend_jax.h5"
     start_from_backend: False
-    threadCount: 16
+    threadCount: 32
 
 kwargs_constraints:
   joint_lens_with_light: [[0, 0, ['center_x', 'center_y']], [2, 2, ['center_x', 'center_y']], [3, 3, ['center_x', 'center_y']], [4, 4, ['center_x', 'center_y']], [5, 5, ['center_x', 'center_y']]] # Lens, GX, G2, G3, G7
@@ -122,7 +131,6 @@ kwargs_likelihood:
   source_position_sigma: 0.001
   image_position_uncertainty: 0.0004
   check_bounds: True
-  check_positive_flux: True
 
 kwargs_model:
   multi_plane: True
